@@ -100,7 +100,7 @@ gs_theme_window_real_realize (GtkWidget *widget)
 	window = NULL;
 	preview_xid = g_getenv ("XSCREENSAVER_WINDOW");
 
-	if (preview_xid != NULL)
+	if (preview_xid != NULL && GDK_IS_X11_DISPLAY (gdk_display_get_default ()))
 	{
 		char *end;
 

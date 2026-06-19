@@ -1311,9 +1311,19 @@ constrain_list_size (GtkWidget      *widget,
 {
 	GtkRequisition req;
 	int            max_height;
+	GdkDisplay    *display;
+
+	display = gtk_widget_get_display (widget);
 
 	/* constrain height to be the tree height up to a max */
-	max_height = (HeightOfScreen (gdk_x11_screen_get_xscreen (gtk_widget_get_screen (widget)))) / 4;
+	if (GDK_IS_X11_DISPLAY (display))
+	{
+		max_height = (HeightOfScreen (gdk_x11_screen_get_xscreen (gtk_widget_get_screen (widget)))) / 4;
+	}
+	else
+	{
+		max_height = gdk_screen_get_height (gtk_widget_get_screen (widget)) / 4;
+	}
 
 	gtk_widget_get_preferred_size (to_size, &req, NULL);
 	allocation->height = MIN (req.height, max_height);
@@ -1459,6 +1469,9 @@ get_best_visual_for_display (GdkDisplay *display)
 	gboolean      res;
 
 	visual = NULL;
+	if (!GDK_IS_X11_DISPLAY (display))
+		return NULL;
+
 	screen = gdk_display_get_default_screen (display);
 
 	error = NULL;
@@ -1837,6 +1850,10 @@ main (int    argc,
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 # endif
 	textdomain (GETTEXT_PACKAGE);
+#endif
+
+#ifdef GDK_WINDOWING_X11
+	gdk_set_allowed_backends ("x11");
 #endif
 
 	gtk_init (&argc, &argv);

@@ -285,6 +285,11 @@ gamma_fade_setup (GSFade *fade)
 
 	screen_priv = &fade->priv->screen_priv;
 
+	if (!GDK_IS_X11_DISPLAY (gdk_display_get_default ())) {
+		screen_priv->fade_type = FADE_TYPE_NONE;
+		return FALSE;
+	}
+
 	if (screen_priv->info)
 		return TRUE;
 
@@ -426,6 +431,9 @@ check_gamma_extension (GSFade *fade)
 	screen_priv = &fade->priv->screen_priv;
 
 #ifdef HAVE_XF86VMODE_GAMMA
+	if (!GDK_IS_X11_DISPLAY (gdk_display_get_default ()))
+		goto fade_none;
+
 	res = XF86VidModeQueryExtension (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()), &event, &error);
 	if (! res)
 		goto fade_none;
@@ -588,10 +596,17 @@ static void
 check_randr_extension (GSFade *fade)
 {
 	GdkDisplay *display = gdk_display_get_default ();
-	GdkScreen *screen = gdk_display_get_default_screen (display);
+	GdkScreen *screen;
 	struct GSFadeScreenPrivate *screen_priv;
 
 	screen_priv = &fade->priv->screen_priv;
+
+	if (!GDK_IS_X11_DISPLAY (display)) {
+		screen_priv->fade_type = FADE_TYPE_NONE;
+		return;
+	}
+
+	screen = gdk_display_get_default_screen (display);
 
 	screen_priv->rrscreen = mate_rr_screen_new (screen,
 	                        NULL);

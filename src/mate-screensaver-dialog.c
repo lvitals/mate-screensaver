@@ -68,11 +68,18 @@ static GOptionEntry entries[] = {
 static char* get_id_string(GtkWidget* widget)
 {
 	char* id = NULL;
+	GdkWindow *window;
 
 	g_return_val_if_fail(widget != NULL, NULL);
 	g_return_val_if_fail(GTK_IS_WIDGET(widget), NULL);
 
-	id = g_strdup_printf("%" G_GUINT32_FORMAT, (guint32) GDK_WINDOW_XID(gtk_widget_get_window(widget)));
+	window = gtk_widget_get_window(widget);
+	if (window != NULL && GDK_IS_X11_WINDOW(window)) {
+		id = g_strdup_printf("%" G_GUINT32_FORMAT, (guint32) GDK_WINDOW_XID(window));
+	} else {
+		id = g_strdup("0");
+	}
+
 	return id;
 }
 
@@ -568,6 +575,10 @@ int main(int argc, char** argv)
 	}
 
 	error = NULL;
+
+#ifdef GDK_WINDOWING_X11
+	gdk_set_allowed_backends ("x11");
+#endif
 
 	if (!gtk_init_with_args(&argc, &argv, NULL, entries, NULL, &error))
 	{

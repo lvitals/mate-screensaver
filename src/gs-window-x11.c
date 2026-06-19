@@ -168,6 +168,10 @@ static void
 gs_window_override_user_time (GSWindow *window)
 {
 	guint32 ev_time = gtk_get_current_event_time ();
+	GdkWindow *gdk_window = gtk_widget_get_window (GTK_WIDGET (window));
+
+	if (gdk_window == NULL || !GDK_IS_X11_WINDOW (gdk_window))
+		return;
 
 	if (ev_time == 0)
 	{
@@ -182,10 +186,10 @@ gs_window_override_user_time (GSWindow *window)
 		 * NOTE: Last resort for D-BUS or other non-interactive
 		 *       openings.  Causes roundtrip to server.  Lame.
 		 */
-		ev_time = gdk_x11_get_server_time (gtk_widget_get_window (GTK_WIDGET (window)));
+			ev_time = gdk_x11_get_server_time (gdk_window);
 	}
 
-	gdk_x11_window_set_user_time (gtk_widget_get_window (GTK_WIDGET (window)), ev_time);
+	gdk_x11_window_set_user_time (gdk_window, ev_time);
 }
 
 static void
@@ -234,6 +238,8 @@ widget_clear_all_children (GtkWidget *widget)
 
 	gs_debug ("Clearing all child windows");
 	display = gtk_widget_get_display (widget);
+	if (!GDK_IS_X11_DISPLAY (display))
+		return;
 
 	gdk_x11_display_error_trap_push (display);
 
@@ -516,6 +522,9 @@ get_best_visual_for_display (GdkDisplay *display)
 	gboolean      res;
 
 	visual = NULL;
+	if (!GDK_IS_X11_DISPLAY (display))
+		return NULL;
+
 	screen = gdk_display_get_default_screen (display);
 
 	error = NULL;
@@ -674,6 +683,9 @@ x11_window_is_ours (Window window)
 
 	ret = FALSE;
 
+	if (!GDK_IS_X11_DISPLAY (gdk_display_get_default ()))
+		return FALSE;
+
 	gwindow = gdk_x11_window_lookup_for_display (gdk_display_get_default (), window);
 	if (gwindow && (window != GDK_ROOT_WINDOW ()))
 	{
@@ -770,6 +782,8 @@ select_popup_events (void)
 	GdkDisplay *display;
 
 	display = gdk_display_get_default ();
+	if (!GDK_IS_X11_DISPLAY (display))
+		return;
 
 	gdk_x11_display_error_trap_push (display);
 
@@ -791,6 +805,8 @@ window_select_shape_events (GSWindow *window)
 	GdkDisplay *display;
 
 	display = gtk_widget_get_display (GTK_WIDGET(window));
+	if (!GDK_IS_X11_DISPLAY (display))
+		return;
 
 	gdk_x11_display_error_trap_push (display);
 
@@ -1243,6 +1259,9 @@ create_keyboard_socket (GSWindow *window,
                         guint32   id)
 {
 	int height;
+
+	if (!GDK_IS_X11_DISPLAY (gtk_widget_get_display (GTK_WIDGET (window))))
+		return;
 
 	height = (HeightOfScreen (gdk_x11_screen_get_xscreen (gtk_widget_get_screen (GTK_WIDGET (window))))) / 4;
 
@@ -2109,13 +2128,18 @@ gs_window_real_motion_notify_event (GtkWidget      *widget,
 	gdouble     min_distance;
 	gdouble     min_percentage = 0.1;
 	GdkDisplay *display;
-	GdkScreen  *screen;
+	GdkRectangle geometry;
 
 	window = GS_WINDOW (widget);
 
 	display = gs_window_get_display (window);
-	screen = gdk_display_get_default_screen (display);
-	min_distance = WidthOfScreen (gdk_x11_screen_get_xscreen (screen)) * min_percentage;
+	if (GDK_IS_X11_DISPLAY (display)) {
+		GdkScreen *screen = gdk_display_get_default_screen (display);
+		min_distance = WidthOfScreen (gdk_x11_screen_get_xscreen (screen)) * min_percentage;
+	} else {
+		gdk_monitor_get_geometry (window->priv->monitor, &geometry);
+		min_distance = geometry.width * min_percentage;
+	}
 
 	/* if the last position was not set then don't detect motion */
 	if (window->priv->last_x < 0 || window->priv->last_y < 0)
@@ -2238,16 +2262,25 @@ gs_window_real_grab_broken (GtkWidget          *widget,
 {
 	if (event->grab_window != NULL)
 	{
-		gs_debug ("Grab broken on window %X %s, new grab on window %X",
-		          (guint32) GDK_WINDOW_XID (event->window),
-		          event->keyboard ? "keyboard" : "pointer",
-		          (guint32) GDK_WINDOW_XID (event->grab_window));
+		if (GDK_IS_X11_WINDOW (event->window) &&
+		    GDK_IS_X11_WINDOW (event->grab_window))
+			gs_debug ("Grab broken on window %X %s, new grab on window %X",
+			          (guint32) GDK_WINDOW_XID (event->window),
+			          event->keyboard ? "keyboard" : "pointer",
+			          (guint32) GDK_WINDOW_XID (event->grab_window));
+		else
+			gs_debug ("Grab broken on window %s, new grab on another window",
+			          event->keyboard ? "keyboard" : "pointer");
 	}
 	else
 	{
-		gs_debug ("Grab broken on window %X %s, new grab is outside application",
-		          (guint32) GDK_WINDOW_XID (event->window),
-		          event->keyboard ? "keyboard" : "pointer");
+		if (GDK_IS_X11_WINDOW (event->window))
+			gs_debug ("Grab broken on window %X %s, new grab is outside application",
+			          (guint32) GDK_WINDOW_XID (event->window),
+			          event->keyboard ? "keyboard" : "pointer");
+		else
+			gs_debug ("Grab broken on window %s, new grab is outside application",
+			          event->keyboard ? "keyboard" : "pointer");
 	}
 
 	return FALSE;

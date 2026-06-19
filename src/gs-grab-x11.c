@@ -107,7 +107,10 @@ gs_grab_get (GSGrab     *grab,
 
 	cursor = gdk_cursor_new_for_display (display, GDK_BLANK_CURSOR);
 
-	gs_debug ("Grabbing devices for window=%X", (guint32) GDK_WINDOW_XID (window));
+	if (GDK_IS_X11_WINDOW (window))
+		gs_debug ("Grabbing devices for window=%X", (guint32) GDK_WINDOW_XID (window));
+	else
+		gs_debug ("Grabbing devices for non-X11 window");
 
 	seat = gdk_display_get_default_seat (display);
 	if (!no_pointer_grab)
@@ -211,26 +214,38 @@ gs_grab_move (GSGrab     *grab,
 	if (grab->priv->grab_window == window &&
 	    grab->priv->no_pointer_grab == no_pointer_grab)
 	{
-		gs_debug ("Window %X is already grabbed, skipping",
-		          (guint32) GDK_WINDOW_XID (grab->priv->grab_window));
+		if (GDK_IS_X11_WINDOW (grab->priv->grab_window))
+			gs_debug ("Window %X is already grabbed, skipping",
+			          (guint32) GDK_WINDOW_XID (grab->priv->grab_window));
+		else
+			gs_debug ("Window is already grabbed, skipping");
 		return TRUE;
 	}
 
 	if (grab->priv->grab_window != NULL)
 	{
-		gs_debug ("Moving devices grab from %X to %X",
-		          (guint32) GDK_WINDOW_XID (grab->priv->grab_window),
-		          (guint32) GDK_WINDOW_XID (window));
+		if (GDK_IS_X11_WINDOW (grab->priv->grab_window) &&
+		    GDK_IS_X11_WINDOW (window))
+			gs_debug ("Moving devices grab from %X to %X",
+			          (guint32) GDK_WINDOW_XID (grab->priv->grab_window),
+			          (guint32) GDK_WINDOW_XID (window));
+		else
+			gs_debug ("Moving devices grab");
 	}
 	else
 	{
-		gs_debug ("Getting devices grab on %X",
-		          (guint32) GDK_WINDOW_XID (window));
+		if (GDK_IS_X11_WINDOW (window))
+			gs_debug ("Getting devices grab on %X",
+			          (guint32) GDK_WINDOW_XID (window));
+		else
+			gs_debug ("Getting devices grab");
 
 	}
 
-	gs_debug ("*** doing X server grab");
-	gdk_x11_display_grab (display);
+	if (GDK_IS_X11_DISPLAY (display)) {
+		gs_debug ("*** doing X server grab");
+		gdk_x11_display_grab (display);
+	}
 
 	old_window = grab->priv->grab_window;
 	old_display = grab->priv->grab_display;
@@ -262,8 +277,10 @@ gs_grab_move (GSGrab     *grab,
 			gs_debug ("Could not grab devices for old window");
 	}
 
-	gs_debug ("*** releasing X server grab");
-	gdk_x11_display_ungrab (display);
+	if (GDK_IS_X11_DISPLAY (display)) {
+		gs_debug ("*** releasing X server grab");
+		gdk_x11_display_ungrab (display);
+	}
 	gdk_display_flush (display);
 
 	return (result == GDK_GRAB_SUCCESS);
@@ -276,6 +293,9 @@ gs_grab_nuke_focus (GdkDisplay *display)
 	int    rev = 0;
 
 	gs_debug ("Nuking focus");
+
+	if (!GDK_IS_X11_DISPLAY (display))
+		return;
 
 	gdk_x11_display_error_trap_push (display);
 
@@ -308,7 +328,8 @@ gs_grab_grab_window (GSGrab     *grab,
 		else if (i == (int) (retries / 2))
 		{
 			/* try nuking focus in the middle */
-			gs_grab_nuke_focus (display);
+			if (GDK_IS_X11_DISPLAY (display))
+				gs_grab_nuke_focus (display);
 		}
 
 		/* else, wait a second and try to grab again */

@@ -1608,7 +1608,8 @@ on_display_monitor_removed (GdkDisplay *display,
 	gs_debug ("Monitor removed on display %s, now there are %d",
 	          gdk_display_get_name (display), n_monitors);
 
-	gdk_x11_grab_server ();
+	if (GDK_IS_X11_DISPLAY (display))
+		gdk_x11_grab_server ();
 
 	/* remove the now extra window */
 	l = manager->priv->windows;
@@ -1632,7 +1633,8 @@ on_display_monitor_removed (GdkDisplay *display,
 	}
 
 	gdk_display_flush (display);
-	gdk_x11_ungrab_server ();
+	if (GDK_IS_X11_DISPLAY (display))
+		gdk_x11_ungrab_server ();
 }
 
 static void

@@ -2122,28 +2122,35 @@ gs_lock_plug_init (GSLockPlug *plug)
 	{
 		XklEngine *engine;
 
-		engine = xkl_engine_get_instance (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()));
-		if (xkl_engine_get_num_groups (engine) > 1)
+		if (GDK_IS_X11_DISPLAY (gdk_display_get_default ()))
 		{
-			GtkWidget *layout_indicator;
+			engine = xkl_engine_get_instance (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()));
+			if (xkl_engine_get_num_groups (engine) > 1)
+			{
+				GtkWidget *layout_indicator;
 
-			layout_indicator = matekbd_indicator_new ();
-			matekbd_indicator_set_parent_tooltips (MATEKBD_INDICATOR (layout_indicator), TRUE);
-			gtk_box_pack_start (GTK_BOX (plug->priv->auth_prompt_kbd_layout_indicator),
-			                    layout_indicator,
-			                    FALSE,
-			                    FALSE,
-			                    6);
+				layout_indicator = matekbd_indicator_new ();
+				matekbd_indicator_set_parent_tooltips (MATEKBD_INDICATOR (layout_indicator), TRUE);
+				gtk_box_pack_start (GTK_BOX (plug->priv->auth_prompt_kbd_layout_indicator),
+				                    layout_indicator,
+				                    FALSE,
+				                    FALSE,
+				                    6);
 
-			gtk_widget_show_all (layout_indicator);
-			gtk_widget_show (plug->priv->auth_prompt_kbd_layout_indicator);
+				gtk_widget_show_all (layout_indicator);
+				gtk_widget_show (plug->priv->auth_prompt_kbd_layout_indicator);
+			}
+			else
+			{
+				gtk_widget_hide (plug->priv->auth_prompt_kbd_layout_indicator);
+			}
+
+			g_object_unref (engine);
 		}
 		else
 		{
 			gtk_widget_hide (plug->priv->auth_prompt_kbd_layout_indicator);
 		}
-
-		g_object_unref (engine);
 	}
 #endif
 

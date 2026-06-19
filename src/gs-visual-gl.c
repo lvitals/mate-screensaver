@@ -76,6 +76,9 @@ gs_visual_gl_get_best_for_display (GdkDisplay *display)
 
 	g_return_val_if_fail (display != NULL, NULL);
 
+	if (!GDK_IS_X11_DISPLAY (display))
+		return NULL;
+
 	xdisplay = GDK_DISPLAY_XDISPLAY (display);
 	screen = gdk_display_get_default_screen (display);
 	screen_num = GDK_SCREEN_XNUMBER (screen);

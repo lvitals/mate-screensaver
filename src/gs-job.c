@@ -74,11 +74,15 @@ static char *
 widget_get_id_string (GtkWidget *widget)
 {
 	char *id = NULL;
+	GdkWindow *window;
 
 	g_return_val_if_fail (widget != NULL, NULL);
 
-	id = g_strdup_printf ("0x%X",
-	                      (guint32)GDK_WINDOW_XID (gtk_widget_get_window (widget)));
+	window = gtk_widget_get_window (widget);
+	if (window != NULL && GDK_IS_X11_WINDOW (window)) {
+		id = g_strdup_printf ("0x%X", (guint32) GDK_WINDOW_XID (window));
+	}
+
 	return id;
 }
 
@@ -273,8 +277,10 @@ get_env_vars (GtkWidget *widget)
 
 	env = g_ptr_array_new ();
 
-	display_name = gdk_display_get_name (gtk_widget_get_display (widget));
-	g_ptr_array_add (env, g_strdup_printf ("DISPLAY=%s", display_name));
+	if (GDK_IS_X11_DISPLAY (gtk_widget_get_display (widget))) {
+		display_name = gdk_display_get_name (gtk_widget_get_display (widget));
+		g_ptr_array_add (env, g_strdup_printf ("DISPLAY=%s", display_name));
+	}
 
 	g_ptr_array_add (env, g_strdup_printf ("HOME=%s",
 	                                       g_get_home_dir ()));
@@ -294,8 +300,10 @@ get_env_vars (GtkWidget *widget)
 	}
 
 	str = widget_get_id_string (widget);
-	g_ptr_array_add (env, g_strdup_printf ("XSCREENSAVER_WINDOW=%s", str));
-	g_free (str);
+	if (str != NULL) {
+		g_ptr_array_add (env, g_strdup_printf ("XSCREENSAVER_WINDOW=%s", str));
+		g_free (str);
+	}
 
 	g_ptr_array_add (env, NULL);
 
