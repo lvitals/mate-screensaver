@@ -45,6 +45,10 @@ main (int argc, char **argv)
 
 	error = NULL;
 
+#ifdef GDK_WINDOWING_X11
+	gdk_set_allowed_backends ("x11");
+#endif
+
 	if (!gtk_init_with_args (&argc, &argv, NULL, NULL, NULL, &error))
 	{
 		g_printerr (_("%s. See --help for usage information.\n"),

@@ -49,6 +49,10 @@ main (int    argc,
 #endif
 
 	g_set_prgname (argv[0]);
+#ifdef GDK_WINDOWING_X11
+	gdk_set_allowed_backends ("x11");
+#endif
+
 	if (! gtk_init_with_args (&argc, &argv, NULL, NULL, NULL, &error))
 	{
 		if (error != NULL)

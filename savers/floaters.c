@@ -1149,6 +1149,10 @@ main (int   argc,
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
 
+#ifdef GDK_WINDOWING_X11
+	gdk_set_allowed_backends ("x11");
+#endif
+
 	gtk_init_with_args (&argc, &argv,
 	                    /* translators: the word "image" here
 	                     * represents a command line argument
