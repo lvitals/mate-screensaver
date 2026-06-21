@@ -1,0 +1,52 @@
+# Meson build directories
+/build/
+
+# Autotools / Make compilation and configuration artifacts
+/ABOUT-NLS
+/INSTALL
+/aclocal.m4
+/autom4te.cache/
+/compile
+/config.guess
+/config.guess~
+/config.h
+/config.h.in
+/config.log
+/config.rpath
+/config.status
+/config.sub
+/config.sub~
+/configure
+/depcomp
+/install-sh
+/libtool
+/ltmain.sh
+/m4/
+/missing
+/stamp-h1
+
+# Generated Makefiles
+Makefile
+Makefile.in
+
+# Dependencies directory
+.deps/
+
+# Generated files during build
+data/mate-screensaver.pc
+data/mate-screensavers.menu
+data/org.mate.ScreenSaver.service
+doc/mate-screensaver.xml
+src/mate-screensaver.desktop.in
+
+# po translation artifacts
+po/Makefile.in.in
+po/Makevars.template
+po/POTFILES
+po/Rules-quot
+po/boldquot.sed
+po/en@boldquot.header
+po/en@quot.header
+po/insert-header.sin
+po/quot.sed
+po/remove-potcdate.sin
