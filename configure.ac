@@ -6,6 +6,13 @@ AC_INIT([mate-screensaver],
         [https://mate-desktop.org/])
 
 AC_CONFIG_SRCDIR(src/mate-screensaver.c)
+
+AC_ARG_ENABLE([autostart],
+    AS_HELP_STRING([--disable-autostart],
+                   [do not install the X11 screensaver in XDG autostart]),
+    [enable_autostart=$enableval],
+    [enable_autostart=yes])
+AM_CONDITIONAL([ENABLE_AUTOSTART], [test "x$enable_autostart" = "xyes"])
 AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([1.9 no-dist-gzip dist-xz check-news])

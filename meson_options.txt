@@ -16,3 +16,4 @@ option('xscreensaverhackdir', type: 'string', value: '', description: 'Directory
 option('docbook-docs', type: 'boolean', value: false, description: 'Build DocBook documentation')
 option('doc-dir', type: 'string', value: '', description: 'Directory to install documentation')
 option('pam-prefix', type: 'string', value: '', description: 'Directory where PAM files go')
+option('autostart', type: 'boolean', value: true, description: 'Install the X11 screensaver in XDG autostart')

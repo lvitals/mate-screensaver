@@ -126,7 +126,9 @@ executable('mate-screensaver',
   install_dir: bindir
 )
 
-# Autostart desktop file
+# Autostart desktop file.  Disable this for a native Wayland session: this
+# implementation relies on X11 grabs and is not a secure Wayland locker.
+if get_option('autostart')
 desktop_in = configure_file(
   input: 'mate-screensaver.desktop.in.in',
   output: 'mate-screensaver.desktop.in',
@@ -141,6 +143,7 @@ i18n.merge_file(
   install: true,
   install_dir: sysconfdir / 'xdg' / 'autostart'
 )
+endif
 
 # Test binaries
 executable('test-fade',
